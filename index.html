@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日本史クイズ（お試し5問）</title>
+<style>
+  :root{
+    --bg:#faf9f5; --surface:#ffffff; --surface2:#f1efe8;
+    --text:#2c2c2a; --text2:#5f5e5a; --text3:#888780;
+    --border:#d3d1c7;
+    --ok-bg:#e1f5ee; --ok-tx:#0f6e56;
+    --ng-bg:#fcebeb; --ng-tx:#a32d2d;
+    --radius:14px;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    line-height:1.7; padding:20px;
+    display:flex; justify-content:center;
+  }
+  .wrap{ width:100%; max-width:460px; }
+  h1{ font-size:18px; font-weight:500; text-align:center; margin:8px 0 20px; }
+  .meta{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; font-size:13px; color:var(--text3); }
+  .qbox{ background:var(--surface2); border-radius:var(--radius); padding:16px; margin-bottom:14px; }
+  .qtext{ font-size:18px; font-weight:500; line-height:1.6; }
+  .choices{ display:flex; flex-direction:column; gap:10px; }
+  .choice{
+    width:100%; text-align:left; padding:12px 14px; font-size:15px;
+    background:var(--surface); color:var(--text);
+    border:1px solid var(--border); border-radius:8px; cursor:pointer;
+    font-family:inherit; transition:background .15s;
+  }
+  .choice:hover{ background:var(--surface2); }
+  .choice:disabled{ cursor:default; }
+  .feedback{ display:none; margin-top:14px; padding:12px 14px; border-radius:8px; font-size:14px; line-height:1.6; }
+  .btn{
+    width:100%; padding:12px; font-size:15px; margin-top:14px;
+    background:var(--surface); color:var(--text);
+    border:1px solid var(--border); border-radius:8px; cursor:pointer; font-family:inherit;
+  }
+  .btn:hover{ background:var(--surface2); }
+  .result{ display:none; text-align:center; padding:2rem 0; }
+  .result .label{ font-size:14px; color:var(--text2); margin-bottom:6px; }
+  .result .score{ font-size:40px; font-weight:500; }
+  .result .comment{ font-size:15px; color:var(--text2); margin-top:8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>日本史クイズ（お試し5問）</h1>
+
+  <div id="quiz-area">
+    <div class="meta">
+      <span id="counter">第 1 問 / 5</span>
+      <span>日本史</span>
+    </div>
+    <div class="qbox"><div class="qtext" id="question"></div></div>
+    <div class="choices" id="choices"></div>
+    <div class="feedback" id="feedback"></div>
+    <button class="btn" id="next-btn" style="display:none;">次の問題へ →</button>
+  </div>
+
+  <div class="result" id="result-area">
+    <div class="label">結果</div>
+    <div class="score" id="score"></div>
+    <div class="comment" id="comment"></div>
+    <button class="btn" id="retry-btn" style="max-width:160px; margin:20px auto 0;">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  var quiz = [
+    {q:"鎌倉幕府を開いた人物は誰か。", c:["源頼朝","平清盛","足利尊氏","北条時宗"], a:0},
+    {q:"1603年に江戸幕府を開いた人物は誰か。", c:["豊臣秀吉","徳川家康","織田信長","徳川秀忠"], a:1},
+    {q:"1192年に成立したとされるのはどれか。", c:["大化の改新","鎌倉幕府","室町幕府","明治維新"], a:1},
+    {q:"明治維新が始まったのはおよそ何年か。", c:["1789年","1815年","1868年","1912年"], a:2},
+    {q:"『学問のすゝめ』を著したのは誰か。", c:["夏目漱石","福沢諭吉","新渡戸稲造","西郷隆盛"], a:1}
+  ];
+  var idx=0, score=0, answered=false;
+
+  function render(){
+    var item=quiz[idx]; answered=false;
+    document.getElementById("counter").textContent="第 "+(idx+1)+" 問 / "+quiz.length;
+    document.getElementById("question").textContent=item.q;
+    var fb=document.getElementById("feedback"); fb.style.display="none";
+    document.getElementById("next-btn").style.display="none";
+    var box=document.getElementById("choices"); box.innerHTML="";
+    item.c.forEach(function(text,i){
+      var b=document.createElement("button");
+      b.className="choice"; b.textContent=text;
+      b.onclick=function(){ choose(i,b); };
+      box.appendChild(b);
+    });
+  }
+  function choose(i,btn){
+    if(answered) return; answered=true;
+    var item=quiz[idx];
+    var btns=document.getElementById("choices").children;
+    for(var k=0;k<btns.length;k++){ btns[k].disabled=true; }
+    var correct=btns[item.a];
+    correct.style.background="var(--ok-bg)"; correct.style.borderColor="var(--ok-tx)"; correct.style.color="var(--ok-tx)";
+    var fb=document.getElementById("feedback");
+    if(i===item.a){
+      score++; fb.style.background="var(--ok-bg)"; fb.style.color="var(--ok-tx)"; fb.textContent="正解です。";
+    } else {
+      btn.style.background="var(--ng-bg)"; btn.style.borderColor="var(--ng-tx)"; btn.style.color="var(--ng-tx)";
+      fb.style.background="var(--ng-bg)"; fb.style.color="var(--ng-tx)"; fb.textContent="正解は「"+item.c[item.a]+"」です。";
+    }
+    fb.style.display="block";
+    document.getElementById("next-btn").style.display="block";
+  }
+  document.getElementById("next-btn").onclick=function(){
+    idx++;
+    if(idx>=quiz.length){ showResult(); } else { render(); }
+  };
+  function showResult(){
+    document.getElementById("quiz-area").style.display="none";
+    document.getElementById("result-area").style.display="block";
+    document.getElementById("score").textContent=score+" / "+quiz.length;
+    var c=document.getElementById("comment");
+    if(score===quiz.length) c.textContent="満点です。お見事。";
+    else if(score>=3) c.textContent="あと少し。よい調子です。";
+    else c.textContent="復習でぐっと伸びますね。";
+  }
+  document.getElementById("retry-btn").onclick=function(){
+    idx=0; score=0;
+    document.getElementById("result-area").style.display="none";
+    document.getElementById("quiz-area").style.display="block";
+    render();
+  };
+  render();
+})();
+</script>
+</body>
+</html>
